@@ -21,3 +21,12 @@ export function shuffleArray(array) {
    }
    return array;
 }
+
+export const filterCards = (cards, filter) => {
+   return cards.filter((item) => item.type.includes(filter));
+};
+
+export const paginate = (array, limit, page) => {
+   const startIndex = (page - 1) * limit;
+   return array.slice(startIndex, startIndex + parseInt(limit, 10));
+};

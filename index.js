@@ -4,7 +4,13 @@ import path from 'path';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 
-import { saveLoftCards, loadLoftCards, shuffleArray } from './utils.js';
+import {
+   saveLoftCards,
+   loadLoftCards,
+   shuffleArray,
+   filterCards,
+   paginate,
+} from './utils.js';
 
 const app = express();
 app.use(express.json());
@@ -71,21 +77,16 @@ app.post('/catalog', upload.single('image'), (req, res) => {
 });
 
 app.get('/catalog', (req, res) => {
-   const { filter } = req.query;
+   const { filter, limit = 10, page = 1 } = req.query;
 
    const loftCards = loadLoftCards();
 
-   let filtredCards;
+   const filteredCards = filter ? filterCards(loftCards, filter) : loftCards;
+   // const shuffledCards = shuffleArray(filteredCards);
 
-   if (filter) {
-      filtredCards = loftCards.filter((item) => {
-         return item.type.find((item) => item === filter);
-      });
-   }
+   const paginatedCards = paginate(filteredCards, limit, page);
 
-   const shuffledCards = shuffleArray(filtredCards || loftCards);
-
-   res.status(200).json(shuffledCards);
+   res.status(200).json(paginatedCards);
 });
 
 app.get('/catalog/:id', (req, res) => {
