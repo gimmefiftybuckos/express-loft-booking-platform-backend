@@ -77,11 +77,18 @@ app.post('/catalog', upload.single('image'), (req, res) => {
 });
 
 app.get('/catalog', (req, res) => {
-   const { filter, limit = 10, page = 1 } = req.query;
+   const { filter, limit = 10, page = 1, date } = req.query;
 
    const loftCards = loadLoftCards();
 
-   const filteredCards = filter ? filterCards(loftCards, filter) : loftCards;
+   const filteredCards = filterCards(
+      loftCards,
+      filter,
+      decodeURIComponent(date)
+   );
+
+   console.log(filteredCards.length);
+
    // const shuffledCards = shuffleArray(filteredCards);
 
    const paginatedCards = paginate(filteredCards, limit, page);

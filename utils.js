@@ -22,8 +22,13 @@ export function shuffleArray(array) {
    return array;
 }
 
-export const filterCards = (cards, filter) => {
-   return cards.filter((item) => item.type.includes(filter));
+export const filterCards = (cards, filter, date) => {
+   return cards.filter((item) => {
+      const filteredByType = filter ? item.type.includes(filter) : true;
+      const filteredByDate = date ? !item.bookingDates.includes(date) : true;
+
+      return filteredByType && filteredByDate;
+   });
 };
 
 export const paginate = (array, limit, page) => {
