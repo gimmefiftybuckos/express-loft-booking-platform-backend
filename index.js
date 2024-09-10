@@ -77,11 +77,16 @@ app.post('/catalog', upload.single('image'), (req, res) => {
 });
 
 app.get('/catalog', (req, res) => {
-   const { type, limit = 10, page = 1, date } = req.query;
+   const { type, limit = 10, page = 1, date, price } = req.query;
 
    const loftCards = loadLoftCards();
 
-   const filteredCards = filterCards(loftCards, type, decodeURIComponent(date));
+   const filteredCards = filterCards(
+      loftCards,
+      type,
+      decodeURIComponent(date),
+      decodeURIComponent(price)
+   );
 
    console.log(filteredCards.length);
 

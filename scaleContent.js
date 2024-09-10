@@ -70,7 +70,7 @@ const updateData = () => {
    for (let item of content) {
       item.imageUrl = randomImage(20);
       item.rules = randomText(3, rules);
-      item.type = randomText(4, types);
+      item.type = randomText(2, types);
       item.bookingDates = randomDate(40);
       console.log(item);
    }

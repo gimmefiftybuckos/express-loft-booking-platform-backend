@@ -22,12 +22,17 @@ export function shuffleArray(array) {
    return array;
 }
 
-export const filterCards = (cards, filter, date) => {
+export const filterCards = (cards, filter, date, price) => {
    return cards.filter((item) => {
+      const [minPrice, maxPrice] = price.split(':');
+
       const filteredByType = filter ? item.type.includes(filter) : true;
       const filteredByDate = date ? !item.bookingDates.includes(date) : true;
+      const filteredByPrice = maxPrice
+         ? item.pricePerHour >= minPrice && item.pricePerHour <= maxPrice
+         : true;
 
-      return filteredByType && filteredByDate;
+      return filteredByType && filteredByDate && filteredByPrice;
    });
 };
 
