@@ -18,3 +18,11 @@ export interface ILoftCard {
 }
 
 export type TStoragePath = storagePaths;
+
+export type TQuerryParams = {
+   type: string;
+   limit: number;
+   page: number;
+   date: string;
+   price: string;
+};
