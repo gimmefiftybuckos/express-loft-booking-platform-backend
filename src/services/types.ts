@@ -1,3 +1,5 @@
+import { storagePaths } from './utils';
+
 export interface ILoftCard {
    id: string;
    title: string;
@@ -14,3 +16,5 @@ export interface ILoftCard {
    rules: string[];
    bookingDates: string[];
 }
+
+export type TStoragePath = storagePaths;

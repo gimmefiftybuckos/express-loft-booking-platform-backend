@@ -1,18 +1,23 @@
 import fs from 'fs';
-import { ILoftCard } from './types';
+import { ILoftCard, TStoragePath } from './types';
+
+export enum storagePaths {
+   LOFTS = 'loftCards.json',
+   USERS = 'users.json',
+}
 
 const jsonFilePath = 'loftCards.json';
 
-export const loadLoftCards = (): Array<ILoftCard> => {
-   if (fs.existsSync(jsonFilePath)) {
-      const data = fs.readFileSync(jsonFilePath, 'utf-8');
+export const loadData = (path: TStoragePath): Array<ILoftCard> => {
+   if (fs.existsSync(path)) {
+      const data = fs.readFileSync(path, 'utf-8');
       return JSON.parse(data);
    }
    return [];
 };
 
-export const saveLoftCards = (cards: ILoftCard[]) => {
-   fs.writeFileSync(jsonFilePath, JSON.stringify(cards, null, 2), 'utf-8');
+export const saveData = <T>(elems: Array<T>, path: TStoragePath) => {
+   fs.writeFileSync(path, JSON.stringify(elems, null, 2), 'utf-8');
 };
 
 export function shuffleArray(array: ILoftCard[]) {
@@ -44,8 +49,6 @@ export const filterCards = (
 };
 
 export const paginate = (array: ILoftCard[], limit: number, page: number) => {
-   console.log(array, limit, page);
-
    const startIndex = (page - 1) * limit;
    return array.slice(startIndex, startIndex + limit);
 };
