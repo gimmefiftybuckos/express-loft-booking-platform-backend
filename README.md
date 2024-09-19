@@ -1,6 +1,6 @@
 # loft-radar-project-backend
 
-## ToDo:
+ToDo:
 1. Users DB
 2. JWT generate methods
 3. Comments DB
