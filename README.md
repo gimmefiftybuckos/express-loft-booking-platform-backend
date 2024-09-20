@@ -5,6 +5,8 @@ ToDo:
 2. JWT generate methods
 3. Comments DB
 
+Значения из .env.example совпадают с .env
+
 Для запуска проекта необходимо:
 
 1. Установить зависимости
@@ -13,8 +15,15 @@ ToDo:
 npm i
 ```
 
-2. Запустить dev-сервер:
+2. Скопировать файл с переменными окружения:
+
+```shell
+cp .env.example .env
+```
+
+3. Запустить dev-сервер:
 
 ```shell
 npm run dev
 ```
+
