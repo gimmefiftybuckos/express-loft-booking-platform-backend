@@ -1,10 +1,11 @@
 import express from 'express';
 import path from 'path';
 
-import { loadData, storagePaths } from '../services/utils';
-import { updateData } from '../services/scaleContent';
+import { loadData } from '../services/utils';
+import { updateData } from '../features/scaleContent';
 
 import controllers from '../controllers';
+import { storagePaths } from '../services/constants';
 
 const router = express.Router();
 

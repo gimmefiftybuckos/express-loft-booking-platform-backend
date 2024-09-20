@@ -1,12 +1,8 @@
 import { Request, Response } from 'express';
 
 import { ILoftCard, TQuerryParams } from '../services/types';
-import {
-   filterCards,
-   loadData,
-   paginate,
-   storagePaths,
-} from '../services/utils';
+import { filterCards, loadData, paginate } from '../services/utils';
+import { storagePaths } from '../services/constants';
 
 export class CatalogController {
    public async getLofts(

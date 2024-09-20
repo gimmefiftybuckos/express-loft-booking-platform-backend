@@ -1,5 +1,6 @@
-import { ILoftCard } from './types';
-import { loadData, saveData, storagePaths } from './utils';
+import { storagePaths } from '../services/constants';
+import { ILoftCard } from '../services/types';
+import { loadData, saveData } from '../services/utils';
 
 const content = loadData(storagePaths.LOFTS);
 
@@ -77,7 +78,7 @@ export const updateData = () => {
    }
    console.log(content);
 
-   saveData<ILoftCard>(content, storagePaths.LOFTS);
+   saveData<ILoftCard[]>(content, storagePaths.LOFTS);
    return;
 };
 

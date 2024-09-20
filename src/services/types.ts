@@ -1,4 +1,4 @@
-import { storagePaths } from './utils';
+import { storagePaths } from './constants';
 
 export interface ILoftCard {
    id: string;
@@ -25,4 +25,32 @@ export type TQuerryParams = {
    page: number;
    date: string;
    price: string;
+};
+
+export type TLoginData = {
+   login: string;
+   password: string;
+};
+
+export type TRegisterData = {
+   email: string;
+   login: string;
+   password: string;
+};
+
+export type TUserData = {
+   userId: string;
+   registrData: TRegisterData;
+   registrTime: Date;
+   accessToken: string;
+   refreshToken: string;
+};
+
+export type TUserResponse = {
+   accessToken: string;
+   refreshToken: string;
+   user: {
+      email: string;
+      login: string;
+   };
 };

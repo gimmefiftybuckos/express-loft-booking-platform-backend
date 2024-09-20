@@ -1,58 +1,128 @@
-import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
-type TRegisterData = {
-   email: string;
-   login: string;
-   password: string;
-};
+import { TUserData, TUserResponse } from '../services/types';
+import { storagePaths, TypeJWT, usersDir } from '../services/constants';
 
-type TUserData = {
-   userId: string;
-   registrData: TRegisterData;
-   registrTime: Date;
-   accesToken: string;
-   refreshToken: string;
-};
+import { checkFileExists, encrypt, writeFile } from '../services/utils';
 
-type TLoginData = {
-   login: string;
-   password: string;
-};
+const key = process.env.JWT_KEY;
 
-export class AuthController {
-   public async registrUser(
-      req: Request<unknown, unknown, TRegisterData>,
-      res: Response
-   ) {
-      const { email, login, password } = req.body;
-      const token = uuidv4();
+export abstract class AuthController {
+   protected saveUserData = async (userData: TUserData, login: string) => {
+      const userKey = encrypt(login);
+      const userDirPath = path.resolve(usersDir, `user_${userKey}`);
+      const userFilePath = path.join(userDirPath, 'user.json');
+      await writeFile(userDirPath, userFilePath, userData);
+   };
 
-      const userData: TUserData = {
-         userId: token,
-         registrData: {
-            email: email,
-            login: login,
-            password: password,
+   protected createJWT = (data: {
+      email: string;
+      login: string;
+      type: TypeJWT;
+   }): string | false => {
+      if (!key) {
+         return false;
+      }
+
+      if (data.type === TypeJWT.ACCESS) {
+         return jwt.sign(data, key, {
+            expiresIn: '1s',
+         });
+      }
+
+      if (data.type === TypeJWT.REFRESH) {
+         return jwt.sign(data, key, {
+            expiresIn: '60d',
+         });
+      }
+
+      return false;
+   };
+
+   protected createTokens = (email: string, login: string) => {
+      const accessToken = this.createJWT({
+         email,
+         login,
+         type: TypeJWT.ACCESS,
+      });
+
+      const refreshToken = this.createJWT({
+         email,
+         login,
+         type: TypeJWT.REFRESH,
+      });
+
+      if (!accessToken || !refreshToken) {
+         throw new Error('Failed to create JWT token');
+      }
+
+      return { accessToken, refreshToken };
+   };
+
+   protected verifyJWT = (token: string) => {
+      if (!key) {
+         return false;
+      }
+
+      try {
+         const decoded = jwt.verify(token, key);
+         return decoded;
+      } catch (error) {
+         if (error instanceof jwt.TokenExpiredError) {
+            throw new Error('Token expired');
+         }
+         throw new Error('Invalid token');
+      }
+   };
+
+   protected createUserResponse = (userData: TUserData): TUserResponse => {
+      return {
+         accessToken: userData.accessToken,
+         refreshToken: userData.refreshToken,
+         user: {
+            email: userData.registrData.email,
+            login: userData.registrData.login,
          },
-         registrTime: new Date(),
-         accesToken: 'test',
-         refreshToken: 'testtest',
       };
+   };
 
-      console.log(token);
+   protected getUser = async (data: {
+      email?: string;
+      login?: string;
+      id?: string;
+   }): Promise<TUserData | false> => {
+      const dir = await checkFileExists(usersDir);
+      if (!dir) {
+         console.error(`User directory was created on ${usersDir} path`);
+         return false;
+      }
 
-      console.log(userData);
+      const usersFolder = await fs.promises.readdir(usersDir);
 
-      res.send('User registered');
-   }
+      for (let folder of usersFolder) {
+         const userFilePath = path.join(usersDir, folder, storagePaths.USER);
 
-   public async loginUser(
-      req: Request<unknown, unknown, TLoginData>,
-      res: Response
-   ) {
-      const { login, password } = req.body;
-      console.log(login, password);
-      res.send('User logined');
-   }
+         const isExist = await checkFileExists(userFilePath);
+
+         if (isExist) {
+            const userFile = await fs.promises.readFile(userFilePath, 'utf-8');
+            const userData: TUserData = JSON.parse(userFile);
+
+            const existingLogin = userData.registrData.login;
+            const existingEmail = userData.registrData.email;
+            const existingId = userData.userId;
+
+            if (
+               existingLogin === data.login ||
+               existingEmail === data.email ||
+               existingId === data.id
+            ) {
+               return userData;
+            }
+         }
+      }
+      return false;
+   };
 }

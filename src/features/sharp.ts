@@ -1,20 +1,22 @@
 import fs from 'fs';
 import path from 'path';
-import sharp from '../../node_modules/sharp/lib/index';
+import sharp from 'sharp';
 
-const inputDir = './temp';
-const outputDir = './uploads';
+enum Dir {
+   INPUT = './temp',
+   OUTPUT = './uploads',
+}
 
-if (!fs.existsSync(outputDir)) {
-   fs.mkdirSync(outputDir, { recursive: true });
+if (!fs.existsSync(Dir.OUTPUT)) {
+   fs.mkdirSync(Dir.OUTPUT, { recursive: true });
 }
 
 export const compressImages = async () => {
-   const files = fs.readdirSync(inputDir);
+   const files = fs.readdirSync(Dir.INPUT);
 
    for (const file of files) {
-      const inputFilePath = path.join(inputDir, file);
-      const outputFilePath = path.join(outputDir, file);
+      const inputFilePath = path.join(Dir.INPUT, file);
+      const outputFilePath = path.join(Dir.OUTPUT, file);
 
       const extname = path.extname(file).toLowerCase();
       if (['.jpg', '.jpeg', '.png', '.webp'].includes(extname)) {
