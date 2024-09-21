@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import { ILoftCard, TQuerryParams } from '../services/types';
 import { filterCards, loadData, paginate } from '../services/utils';
-import { storagePaths } from '../services/constants';
+import { StoragePaths } from '../services/constants';
 
 export class CatalogController {
    public async getLofts(
@@ -11,7 +11,7 @@ export class CatalogController {
    ) {
       const { type, limit = 10, page = 1, date, price } = req.query;
 
-      const loftCards = loadData(storagePaths.LOFTS);
+      const loftCards = loadData(StoragePaths.LOFTS);
 
       const filteredCards = filterCards(
          loftCards,
@@ -28,7 +28,7 @@ export class CatalogController {
    }
 
    public async getItem(req: Request, res: Response) {
-      const loftCards = loadData(storagePaths.LOFTS);
+      const loftCards = loadData(StoragePaths.LOFTS);
       const loftCard = loftCards.find((card) => card.id === req.params.id);
 
       if (loftCard) {

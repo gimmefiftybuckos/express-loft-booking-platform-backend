@@ -5,7 +5,7 @@ export enum TypeJWT {
    REFRESH = 'refresh',
 }
 
-export enum storagePaths {
+export enum StoragePaths {
    LOFTS = 'loftCards.json',
    USER = 'user.json',
 }

@@ -1,8 +1,8 @@
-import { storagePaths } from '../services/constants';
+import { StoragePaths } from '../services/constants';
 import { ILoftCard } from '../services/types';
 import { loadData, saveData } from '../services/utils';
 
-const content = loadData(storagePaths.LOFTS);
+const content = loadData(StoragePaths.LOFTS);
 
 const randomNum = (min: number, max: number) =>
    Math.floor(Math.random() * (max - min + 1)) + min;
@@ -78,7 +78,7 @@ export const updateData = () => {
    }
    console.log(content);
 
-   saveData<ILoftCard[]>(content, storagePaths.LOFTS);
+   saveData<ILoftCard[]>(content, StoragePaths.LOFTS);
    return;
 };
 

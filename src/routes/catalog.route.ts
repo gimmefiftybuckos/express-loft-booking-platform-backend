@@ -5,7 +5,7 @@ import { loadData } from '../services/utils';
 import { updateData } from '../features/scaleContent';
 
 import controllers from '../controllers';
-import { storagePaths } from '../services/constants';
+import { StoragePaths } from '../services/constants';
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.use(
 
 router.get('/update', (req, res) => {
    updateData();
-   const loftCards = loadData(storagePaths.LOFTS);
+   const loftCards = loadData(StoragePaths.LOFTS);
    res.status(200).json(loftCards);
 });
 

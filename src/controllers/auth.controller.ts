@@ -3,7 +3,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 
 import { TUserData, TUserResponse } from '../services/types';
-import { storagePaths, TypeJWT, usersDir } from '../services/constants';
+import { StoragePaths, TypeJWT, usersDir } from '../services/constants';
 
 import { checkFileExists, encrypt, writeFile } from '../services/utils';
 
@@ -102,7 +102,7 @@ export abstract class AuthController {
       const usersFolder = await fs.promises.readdir(usersDir);
 
       for (let folder of usersFolder) {
-         const userFilePath = path.join(usersDir, folder, storagePaths.USER);
+         const userFilePath = path.join(usersDir, folder, StoragePaths.USER);
 
          const isExist = await checkFileExists(userFilePath);
 

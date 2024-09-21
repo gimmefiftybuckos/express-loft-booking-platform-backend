@@ -1,4 +1,4 @@
-import { storagePaths } from './constants';
+import { StoragePaths } from './constants';
 
 export interface ILoftCard {
    id: string;
@@ -17,7 +17,7 @@ export interface ILoftCard {
    bookingDates: string[];
 }
 
-export type TStoragePath = storagePaths;
+export type TStoragePath = StoragePaths;
 
 export type TQuerryParams = {
    type: string;
