@@ -95,7 +95,7 @@ export const encrypt = (value: string) => {
    );
    let encrypted = cipher.update(value);
    encrypted = Buffer.concat([encrypted, cipher.final()]);
-   return iv + ':' + encrypted.toString('hex');
+   return iv + '_' + encrypted.toString('hex');
 };
 
 export const decrypt = (value: string) => {
@@ -104,9 +104,9 @@ export const decrypt = (value: string) => {
       throw Error('Invalid crypto key');
    }
 
-   const parts = value.split(':');
-   const iv = Buffer.from(parts[0], 'hex');
-   const encryptedText = Buffer.from(parts[1], 'hex');
+   const parts = value.split('_');
+   const iv = Buffer.from(parts[1], 'hex');
+   const encryptedText = Buffer.from(parts[2], 'hex');
    const decipher = crypto.createDecipheriv(
       'aes-128-cbc',
       Buffer.from(key),
