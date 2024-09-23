@@ -3,9 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { TRegisterData, TUserData } from '../services/types';
 import { hashValue } from '../services/utils';
-import { HttpStatusCode } from '../services/HttpStatusCode';
 
 import { AuthController } from './auth.controller';
+import { HttpStatusCode } from 'axios';
 
 export class RegistrController extends AuthController {
    public registerUser = async (
@@ -16,34 +16,35 @@ export class RegistrController extends AuthController {
 
       if (!email || !login || !password) {
          return res
-            .status(HttpStatusCode.BAD_REQUEST)
+            .status(HttpStatusCode.BadRequest)
             .json({ error: 'Email, login and password are required' });
       }
 
       try {
-         const isUserExists = await this.getUser({ login, email });
-         if (isUserExists) {
+         const isUserExists = await this.getUser({ login });
+
+         if (!isUserExists) {
+            const newUserData = await this.createUser(email, login, password);
+            await this.saveUserData(newUserData, login);
+
             return res
-               .status(HttpStatusCode.BAD_REQUEST)
-               .json({ error: 'Login or email already in use' });
+               .status(HttpStatusCode.Ok)
+               .json(this.createUserResponse(newUserData));
          }
 
-         const newUserData = await this.createUser(email, login, password);
-         await this.saveUserData(newUserData, login);
-
          return res
-            .status(HttpStatusCode.OK)
-            .json(this.createUserResponse(newUserData));
+            .status(HttpStatusCode.BadRequest)
+            .json({ error: 'Login already in use' });
       } catch (error) {
          console.error('Error during registration', error);
 
          if (error instanceof Error) {
             return res
-               .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+               .status(HttpStatusCode.InternalServerError)
                .json({ error: 'Internal Server Error: ' + error.message });
          } else {
             return res
-               .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+               .status(HttpStatusCode.InternalServerError)
                .json({ error: 'Unknown error during registration' });
          }
       }

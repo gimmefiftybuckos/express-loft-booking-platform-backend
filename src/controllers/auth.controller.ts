@@ -28,13 +28,13 @@ export abstract class AuthController {
 
       if (data.type === TypeJWT.ACCESS) {
          return jwt.sign(data, key, {
-            expiresIn: '1s',
+            expiresIn: '2d',
          });
       }
 
       if (data.type === TypeJWT.REFRESH) {
          return jwt.sign(data, key, {
-            expiresIn: '60d',
+            expiresIn: '30d',
          });
       }
 
@@ -62,11 +62,10 @@ export abstract class AuthController {
    };
 
    protected verifyJWT = (token: string) => {
-      if (!key) {
-         return false;
-      }
-
       try {
+         if (!key) {
+            return false;
+         }
          const decoded = jwt.verify(token, key);
          return decoded;
       } catch (error) {
@@ -90,37 +89,40 @@ export abstract class AuthController {
 
    protected getUser = async (data: {
       email?: string;
-      login?: string;
+      login: string;
       id?: string;
    }): Promise<TUserData | false> => {
-      const dir = await checkFileExists(usersDir);
-      if (!dir) {
+      if (!usersDir) {
          console.error(`User directory was created on ${usersDir} path`);
          return false;
       }
 
-      const usersFolder = await fs.promises.readdir(usersDir);
+      const userDir = `${usersDir}/user_${encrypt(data.login)}`;
 
-      for (let folder of usersFolder) {
-         const userFilePath = path.join(usersDir, folder, StoragePaths.USER);
+      const dir = await checkFileExists(userDir);
 
-         const isExist = await checkFileExists(userFilePath);
+      if (!dir) {
+         return false;
+      }
 
-         if (isExist) {
-            const userFile = await fs.promises.readFile(userFilePath, 'utf-8');
-            const userData: TUserData = JSON.parse(userFile);
+      const userFilePath = path.join(userDir, StoragePaths.USER);
 
-            const existingLogin = userData.registrData.login;
-            const existingEmail = userData.registrData.email;
-            const existingId = userData.userId;
+      const isExist = await checkFileExists(userFilePath);
 
-            if (
-               existingLogin === data.login ||
-               existingEmail === data.email ||
-               existingId === data.id
-            ) {
-               return userData;
-            }
+      if (isExist) {
+         const userFile = await fs.promises.readFile(userFilePath, 'utf-8');
+         const userData: TUserData = JSON.parse(userFile);
+
+         const existingLogin = userData.registrData.login;
+         const existingEmail = userData.registrData.email;
+         const existingId = userData.userId;
+
+         if (
+            existingLogin === data.login ||
+            existingEmail === data.email ||
+            existingId === data.id
+         ) {
+            return userData;
          }
       }
       return false;

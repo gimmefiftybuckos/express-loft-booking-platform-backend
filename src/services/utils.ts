@@ -5,8 +5,8 @@ require('dotenv').config();
 
 import { ILoftCard, TStoragePath } from './types';
 
-const key = process.env.SECRET_KEY;
-const iv = process.env.IV;
+const KEY = process.env.SECRET_KEY;
+const IV = process.env.IV;
 
 export const loadData = (path: TStoragePath): Array<ILoftCard> => {
    if (fs.existsSync(path)) {
@@ -83,33 +83,33 @@ export const paginate = (array: ILoftCard[], limit: number, page: number) => {
 };
 
 export const encrypt = (value: string) => {
-   if (!key || !iv) {
+   if (!KEY || !IV) {
       console.error('Crypto key is undefined');
       throw Error('Invalid crypto key');
    }
 
    const cipher = crypto.createCipheriv(
       'aes-128-cbc',
-      Buffer.from(key),
-      Buffer.from(iv, 'hex')
+      Buffer.from(KEY),
+      Buffer.from(IV, 'hex')
    );
    let encrypted = cipher.update(value);
    encrypted = Buffer.concat([encrypted, cipher.final()]);
-   return iv + '_' + encrypted.toString('hex');
+   return encrypted.toString('hex');
 };
 
 export const decrypt = (value: string) => {
-   if (!key) {
+   if (!KEY || !IV) {
       console.error('Crypto key is undefined');
       throw Error('Invalid crypto key');
    }
 
    const parts = value.split('_');
-   const iv = Buffer.from(parts[1], 'hex');
-   const encryptedText = Buffer.from(parts[2], 'hex');
+   const iv = Buffer.from(IV, 'hex');
+   const encryptedText = Buffer.from(parts[1], 'hex');
    const decipher = crypto.createDecipheriv(
       'aes-128-cbc',
-      Buffer.from(key),
+      Buffer.from(KEY),
       iv
    );
    let decrypted = decipher.update(encryptedText);

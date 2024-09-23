@@ -54,3 +54,11 @@ export type TUserResponse = {
       login: string;
    };
 };
+
+export type TJWTData = {
+   email: string;
+   login: string;
+   type: string;
+   iat: number;
+   exp: number;
+};

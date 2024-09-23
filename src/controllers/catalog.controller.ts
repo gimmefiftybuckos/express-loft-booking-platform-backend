@@ -3,12 +3,20 @@ import { Request, Response } from 'express';
 import { ILoftCard, TQuerryParams } from '../services/types';
 import { filterCards, loadData, paginate } from '../services/utils';
 import { StoragePaths } from '../services/constants';
+import { HttpStatusCode } from 'axios';
+import { UserController } from './user.controller';
 
-export class CatalogController {
-   public async getLofts(
+export class CatalogController extends UserController {
+   public getLofts = async (
       req: Request<unknown, unknown, unknown, TQuerryParams>,
-      res: Response<ILoftCard[]>
-   ) {
+      res: Response<ILoftCard[] | { error: string }>
+   ) => {
+      const isAuthenticated = this.verifyAuth(req, res);
+
+      if (!isAuthenticated) {
+         return;
+      }
+
       const { type, limit = 10, page = 1, date, price } = req.query;
 
       const loftCards = loadData(StoragePaths.LOFTS);
@@ -24,17 +32,17 @@ export class CatalogController {
 
       const paginatedCards = paginate(filteredCards, limit, page);
 
-      res.status(200).json(paginatedCards);
-   }
+      res.status(HttpStatusCode.Ok).json(paginatedCards);
+   };
 
-   public async getItem(req: Request, res: Response) {
+   public getItem = async (req: Request, res: Response) => {
       const loftCards = loadData(StoragePaths.LOFTS);
       const loftCard = loftCards.find((card) => card.id === req.params.id);
 
       if (loftCard) {
          res.json(loftCard);
       } else {
-         res.status(404).send('Loft card not found.');
+         res.status(HttpStatusCode.NotFound).send('Loft card not found.');
       }
-   }
+   };
 }
