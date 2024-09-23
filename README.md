@@ -1,9 +1,13 @@
 # loft-radar-project-backend
 
 ToDo:
-1. Users DB
-2. JWT generate methods
-3. Comments DB
+1. Users DB ✓
+2. JWT generate and verify methods ✓
+3. Token refresh ✓
+4. Error catching ✓
+5. Refactoring
+6. Comments DB
+7. Tests (?)
 
 Значения из .env.example совпадают с .env
 
