@@ -21,7 +21,7 @@ export class RegistrController extends AuthController {
       }
 
       try {
-         const isUserExists = await this.getUser({ login });
+         const isUserExists = await this.findUser({ login });
 
          if (!isUserExists) {
             const newUserData = await this.createUser(email, login, password);

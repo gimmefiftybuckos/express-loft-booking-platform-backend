@@ -61,18 +61,17 @@ export abstract class AuthController {
       return { accessToken, refreshToken };
    };
 
-   protected verifyJWT = (token: string) => {
+   protected verifyTokenJWT = (token: string) => {
       try {
          if (!key) {
-            return false;
+            throw new Error('Missing JWT key');
          }
+
          const decoded = jwt.verify(token, key);
          return decoded;
       } catch (error) {
-         if (error instanceof jwt.TokenExpiredError) {
-            throw new Error('Token expired');
-         }
-         throw new Error('Invalid token');
+         console.error('JWT Verification Error:', error);
+         throw new Error('Token verification failed: Invalid or expired token');
       }
    };
 
@@ -87,7 +86,7 @@ export abstract class AuthController {
       };
    };
 
-   protected getUser = async (data: {
+   protected findUser = async (data: {
       email?: string;
       login: string;
       id?: string;

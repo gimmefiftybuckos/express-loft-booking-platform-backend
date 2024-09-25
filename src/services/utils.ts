@@ -8,16 +8,33 @@ import { ILoftCard, TStoragePath } from './types';
 const KEY = process.env.SECRET_KEY;
 const IV = process.env.IV;
 
-export const loadData = (path: TStoragePath): Array<ILoftCard> => {
-   if (fs.existsSync(path)) {
-      const data = fs.readFileSync(path, 'utf-8');
+export const loadData = async (
+   path: TStoragePath
+): Promise<Array<ILoftCard>> => {
+   try {
+      const fileExists = await checkFileExists(path);
+      const data = await fs.promises.readFile(path, 'utf-8');
       return JSON.parse(data);
+   } catch (error) {
+      console.error(`Error loading data from ${path}:`, error);
+      throw new Error('Error loading data from storage');
    }
-   return [];
 };
 
-export const saveData = <T>(elems: T, path: TStoragePath) => {
-   fs.writeFileSync(path, JSON.stringify(elems, null, 2), 'utf-8');
+export const saveData = async <T>(
+   elems: T,
+   path: TStoragePath
+): Promise<void> => {
+   try {
+      await fs.promises.writeFile(
+         path,
+         JSON.stringify(elems, null, 2),
+         'utf-8'
+      );
+   } catch (error) {
+      console.error(`Error saving data to ${path}:`, error);
+      throw new Error('Error saving data to storage');
+   }
 };
 
 export const checkFileExists = async (filePath: string): Promise<boolean> => {

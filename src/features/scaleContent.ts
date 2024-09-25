@@ -2,8 +2,6 @@ import { StoragePaths } from '../services/constants';
 import { ILoftCard } from '../services/types';
 import { loadData, saveData } from '../services/utils';
 
-const content = loadData(StoragePaths.LOFTS);
-
 const randomNum = (min: number, max: number) =>
    Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -68,7 +66,9 @@ const randomDate = (value: number) => {
    return res;
 };
 
-export const updateData = () => {
+export const updateData = async () => {
+   const content = await loadData(StoragePaths.LOFTS);
+
    for (let item of content) {
       item.imageUrl = randomImage(20);
       item.rules = randomText(3, rules);
