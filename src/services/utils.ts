@@ -8,11 +8,11 @@ import { ILoftCard, TStoragePath } from './types';
 const KEY = process.env.SECRET_KEY;
 const IV = process.env.IV;
 
-export const loadData = async (
-   path: TStoragePath
-): Promise<Array<ILoftCard>> => {
+export const loadData = async <T>(
+   path: TStoragePath | string
+): Promise<Array<T>> => {
    try {
-      const fileExists = await checkFileExists(path);
+      await checkFileExists(path);
       const data = await fs.promises.readFile(path, 'utf-8');
       return JSON.parse(data);
    } catch (error) {
@@ -23,7 +23,7 @@ export const loadData = async (
 
 export const saveData = async <T>(
    elems: T,
-   path: TStoragePath
+   path: TStoragePath | string
 ): Promise<void> => {
    try {
       await fs.promises.writeFile(
@@ -46,7 +46,7 @@ export const checkFileExists = async (filePath: string): Promise<boolean> => {
    }
 };
 
-export const writeFile = async (
+export const saveNewUserDir = async (
    dirPath: string,
    filePath: string,
    data: any

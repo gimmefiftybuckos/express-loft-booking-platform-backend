@@ -67,7 +67,7 @@ const randomDate = (value: number) => {
 };
 
 export const updateData = async () => {
-   const content = await loadData(StoragePaths.LOFTS);
+   const content = await loadData<ILoftCard>(StoragePaths.LOFTS);
 
    for (let item of content) {
       item.imageUrl = randomImage(20);

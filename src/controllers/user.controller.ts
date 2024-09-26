@@ -3,12 +3,10 @@ import { Request, Response } from 'express';
 
 import { AuthController } from './auth.controller';
 import { TJWTData } from '../services/types';
-import { error } from 'console';
 
 export class UserController extends AuthController {
    public getUser = async (req: Request, res: Response) => {
       const { authorization } = req.headers;
-
       try {
          const data = this.verifyAuth(authorization) as TJWTData;
 
@@ -113,6 +111,35 @@ export class UserController extends AuthController {
          return res
             .status(HttpStatusCode.Ok)
             .json(this.createUserResponse(newUserData));
+      } catch (error) {
+         console.error(error);
+         const axiosError = error as AxiosError;
+         return res.status(HttpStatusCode.Unauthorized).json({
+            error: axiosError.message,
+         });
+      }
+   };
+
+   public addFavorite = async (req: Request, res: Response) => {
+      const { authorization } = req.headers;
+
+      const { loftData } = req.body;
+
+      console.log(authorization, loftData);
+
+      try {
+         // console.log(this.verifyTokenJWT(authorization as string));
+         if (!loftData) {
+            throw new Error('ID Not Found');
+         }
+
+         const userData = this.verifyAuth(authorization) as TJWTData;
+
+         const { login } = userData;
+
+         const data = await this.saveUserFavorite(loftData, login);
+
+         return res.status(HttpStatusCode.Ok).json(data);
       } catch (error) {
          console.error(error);
          const axiosError = error as AxiosError;

@@ -14,7 +14,7 @@ export class CatalogController extends UserController {
       try {
          const { type, limit = 10, page = 1, date, price } = req.query;
 
-         const loftCards = await loadData(StoragePaths.LOFTS);
+         const loftCards = await loadData<ILoftCard>(StoragePaths.LOFTS);
 
          const filteredCards = filterCards(
             loftCards,
@@ -38,7 +38,7 @@ export class CatalogController extends UserController {
    };
 
    public getItem = async (req: Request, res: Response) => {
-      const loftCards = await loadData(StoragePaths.LOFTS);
+      const loftCards = await loadData<ILoftCard>(StoragePaths.LOFTS);
       const loftCard = loftCards.find((card) => card.id === req.params.id);
 
       if (loftCard) {

@@ -62,3 +62,8 @@ export type TJWTData = {
    iat: number;
    exp: number;
 };
+
+export type TFavoritesData = {
+   id: string;
+   title: string;
+};

@@ -2,19 +2,79 @@ import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 
-import { TUserData, TUserResponse } from '../services/types';
+import { TFavoritesData, TUserData, TUserResponse } from '../services/types';
 import { StoragePaths, TypeJWT, usersDir } from '../services/constants';
 
-import { checkFileExists, encrypt, writeFile } from '../services/utils';
+import {
+   checkFileExists,
+   encrypt,
+   loadData,
+   saveData,
+   saveNewUserDir,
+} from '../services/utils';
 
 const key = process.env.JWT_KEY;
 
 export abstract class AuthController {
    protected saveUserData = async (userData: TUserData, login: string) => {
-      const userKey = encrypt(login);
-      const userDirPath = path.resolve(usersDir, `user_${userKey}`);
-      const userFilePath = path.join(userDirPath, 'user.json');
-      await writeFile(userDirPath, userFilePath, userData);
+      try {
+         const userKey = encrypt(login);
+         const userDirPath = path.resolve(usersDir, `user_${userKey}`);
+         const userFilePath = path.join(userDirPath, 'user.json');
+         await saveNewUserDir(userDirPath, userFilePath, userData);
+      } catch (error) {
+         console.error('Error saving user data:', error);
+
+         if (error instanceof Error) {
+            throw new Error(`Failed to save user data: ${error.message}`);
+         } else {
+            throw new Error('Unknown error while saving user data');
+         }
+      }
+   };
+
+   protected saveUserFavorite = async (
+      newData: TFavoritesData,
+      login: string
+   ) => {
+      try {
+         const userKey = encrypt(login);
+         const userDirPath = path.resolve(usersDir, `user_${userKey}`);
+         const userFilePath = path.join(userDirPath, StoragePaths.FAVORITES);
+
+         const isExists = await checkFileExists(userFilePath);
+
+         if (!isExists) {
+            await saveData([newData], userFilePath);
+            return newData;
+         }
+
+         const data = await loadData<TFavoritesData>(userFilePath);
+
+         const isFavoriteIndex = data.findIndex(
+            (item) => item.id === newData.id
+         );
+
+         if (isFavoriteIndex >= 0) {
+            data.splice(isFavoriteIndex, 1);
+            await saveData(data, userFilePath);
+            return data;
+         }
+
+         data.push(newData);
+
+         await saveData(data, userFilePath);
+
+         return data;
+      } catch (error) {
+         console.error('Error saving user favorites:', error);
+
+         if (error instanceof Error) {
+            throw new Error(`Failed to save user favorites: ${error.message}`);
+         } else {
+            throw new Error('Unknown error while saving user favorites');
+         }
+      }
    };
 
    protected createJWT = (data: {
