@@ -1,15 +1,14 @@
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 
-import { TRegisterData, TUserData } from '../services/types';
-import { hashValue } from '../services/utils';
+import { IRegisterData, IUserData } from '../services/types';
+import { encrypt, hashValue } from '../services/utils';
 
 import { AuthController } from './auth.controller';
 import { HttpStatusCode } from 'axios';
 
 export class RegistrController extends AuthController {
    public registerUser = async (
-      req: Request<unknown, unknown, TRegisterData>,
+      req: Request<unknown, unknown, IRegisterData>,
       res: Response
    ) => {
       const { email, login, password } = req.body;
@@ -21,20 +20,21 @@ export class RegistrController extends AuthController {
       }
 
       try {
-         const isUserExists = await this.findUser({ login });
+         const isUserExists = await this.getUserDB({ login, email });
 
          if (!isUserExists) {
-            const newUserData = await this.createUser(email, login, password);
-            await this.saveUserData(newUserData, login);
+            const userData = await this.createUser(email, login, password);
+            await this.saveUserDB(userData);
+            await this.saveTokenDB(userData.login, userData.refreshToken);
 
             return res
                .status(HttpStatusCode.Ok)
-               .json(this.createUserResponse(newUserData));
+               .json(this.createUserResponse(userData));
          }
 
          return res
             .status(HttpStatusCode.BadRequest)
-            .json({ error: 'Login already in use' });
+            .json({ error: 'Login or email already in use' });
       } catch (error) {
          console.error('Error during registration', error);
 
@@ -54,18 +54,16 @@ export class RegistrController extends AuthController {
       email: string,
       login: string,
       password: string
-   ): Promise<TUserData> => {
+   ): Promise<IUserData> => {
       const { accessToken, refreshToken } = this.createTokens(email, login);
-      const id = uuidv4();
+      const id = encrypt(login);
       const hash = await hashValue(password);
 
       return {
-         userId: id,
-         registrData: {
-            email,
-            login,
-            password: hash,
-         },
+         id: id,
+         email,
+         login,
+         password: hash,
          registrTime: new Date(),
          accessToken,
          refreshToken,

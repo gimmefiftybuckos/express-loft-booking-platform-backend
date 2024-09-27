@@ -3,16 +3,17 @@ import { Request, Response } from 'express';
 
 import { AuthController } from './auth.controller';
 import { TJWTData } from '../services/types';
+import { decrypt } from '../services/utils';
 
 export class UserController extends AuthController {
-   public getUser = async (req: Request, res: Response) => {
+   public authUser = async (req: Request, res: Response) => {
       const { authorization } = req.headers;
       try {
          const data = this.verifyAuth(authorization) as TJWTData;
 
          const { login } = data;
 
-         const userData = await this.findUser({ login });
+         const userData = await this.getUserDB({ login });
 
          if (!userData) {
             return res
@@ -35,7 +36,6 @@ export class UserController extends AuthController {
    public logout = async (req: Request, res: Response) => {
       const { token } = req.body;
 
-      console.log(token);
       try {
          if (!token) {
             return res
@@ -45,7 +45,9 @@ export class UserController extends AuthController {
 
          const refreshJWT = token;
 
-         this.verifyTokenJWT(refreshJWT) as TJWTData;
+         const id = await this.getRefreshDB(refreshJWT);
+         const login = decrypt(id);
+         await this.saveTokenDB(login, '');
 
          return res.status(HttpStatusCode.Ok).send('Logouted');
       } catch (error) {
@@ -55,23 +57,6 @@ export class UserController extends AuthController {
             error: axiosError.message,
          });
       }
-   };
-
-   protected verifyAuth = (authorization: string | undefined) => {
-      if (!authorization) {
-         throw new Error(
-            'Token verification failed: Authorization header is missing'
-         );
-      }
-
-      const accessJWT = authorization.split(' ')[1];
-      if (!accessJWT) {
-         throw new Error(
-            'Token verification failed: Authorization token is missing'
-         );
-      }
-
-      return this.verifyTokenJWT(accessJWT);
    };
 
    public refreshTokens = async (
@@ -89,12 +74,13 @@ export class UserController extends AuthController {
 
          const refreshJWT = token;
 
-         const data = this.verifyTokenJWT(refreshJWT) as TJWTData;
-         const { login, email } = data;
+         const id = await this.getRefreshDB(refreshJWT);
+         const login = decrypt(id);
+         const user = await this.getUserDB({ login });
 
-         const userData = await this.findUser({ login });
+         const { email } = user;
 
-         if (!userData) {
+         if (!user) {
             return res
                .status(HttpStatusCode.Unauthorized)
                .json({ error: 'User Not Found' });
@@ -102,15 +88,17 @@ export class UserController extends AuthController {
 
          const { accessToken, refreshToken } = this.createTokens(email, login);
 
-         const newUserData = {
-            ...userData,
+         await this.saveTokenDB(login, refreshToken);
+
+         const newUser = {
+            ...user,
             accessToken,
             refreshToken,
          };
 
          return res
             .status(HttpStatusCode.Ok)
-            .json(this.createUserResponse(newUserData));
+            .json(this.createUserResponse(newUser));
       } catch (error) {
          console.error(error);
          const axiosError = error as AxiosError;
@@ -120,16 +108,13 @@ export class UserController extends AuthController {
       }
    };
 
-   public addFavorite = async (req: Request, res: Response) => {
+   public setFavorite = async (req: Request, res: Response) => {
       const { authorization } = req.headers;
 
-      const { loftData } = req.body;
-
-      console.log(authorization, loftData);
+      const { loftId } = req.body;
 
       try {
-         // console.log(this.verifyTokenJWT(authorization as string));
-         if (!loftData) {
+         if (!loftId) {
             throw new Error('ID Not Found');
          }
 
@@ -137,7 +122,27 @@ export class UserController extends AuthController {
 
          const { login } = userData;
 
-         const data = await this.saveUserFavorite(loftData, login);
+         const data = await this.setFavoriteDB(loftId, login);
+
+         return res.status(HttpStatusCode.Ok).json(data);
+      } catch (error) {
+         console.error(error);
+         const axiosError = error as AxiosError;
+         return res.status(HttpStatusCode.Unauthorized).json({
+            error: axiosError.message,
+         });
+      }
+   };
+
+   public getFavorites = async (req: Request, res: Response) => {
+      const { authorization } = req.headers;
+
+      try {
+         const userData = this.verifyAuth(authorization) as TJWTData;
+
+         const { login } = userData;
+
+         const data = await this.getFavoritesDB(login);
 
          return res.status(HttpStatusCode.Ok).json(data);
       } catch (error) {
