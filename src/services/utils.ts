@@ -121,13 +121,11 @@ export const decrypt = (value: string) => {
       throw Error('Invalid crypto key');
    }
 
-   const parts = value.split('_');
-   const iv = Buffer.from(IV, 'hex');
-   const encryptedText = Buffer.from(parts[1], 'hex');
+   const encryptedText = Buffer.from(value, 'hex');
    const decipher = crypto.createDecipheriv(
       'aes-128-cbc',
       Buffer.from(KEY),
-      iv
+      Buffer.from(IV, 'hex')
    );
    let decrypted = decipher.update(encryptedText);
    decrypted = Buffer.concat([decrypted, decipher.final()]);

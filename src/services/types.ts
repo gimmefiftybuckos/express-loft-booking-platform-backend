@@ -32,19 +32,18 @@ export type TLoginData = {
    password: string;
 };
 
-export type TRegisterData = {
+export interface IRegisterData {
    email: string;
    login: string;
    password: string;
-};
+}
 
-export type TUserData = {
-   userId: string;
-   registrData: TRegisterData;
+export interface IUserData extends IRegisterData {
+   id: string;
    registrTime: Date;
    accessToken: string;
    refreshToken: string;
-};
+}
 
 export type TUserResponse = {
    accessToken: string;
@@ -66,4 +65,9 @@ export type TJWTData = {
 export type TFavoritesData = {
    id: string;
    title: string;
+};
+
+export type TTokens = {
+   accessToken: string;
+   refreshToken: string;
 };

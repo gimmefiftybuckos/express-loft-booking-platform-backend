@@ -19,14 +19,15 @@ export class LoginController extends AuthController {
       }
 
       try {
-         const userData = await this.findUser({ login });
+         const userData = await this.getUserDB({ login });
+
          if (!userData) {
             return res
                .status(HttpStatusCode.BadRequest)
                .json({ error: 'Invalid login or password' });
          }
 
-         const hashPassword = userData.registrData.password;
+         const hashPassword = userData.password;
          const isValidPassword = await comparePassword(password, hashPassword);
 
          if (!isValidPassword) {
@@ -35,16 +36,16 @@ export class LoginController extends AuthController {
                .json({ error: 'Invalid login or password' });
          }
 
-         const email = userData.registrData.email;
+         const email = userData.email;
          const { accessToken, refreshToken } = this.createTokens(email, login);
+
+         await this.saveTokenDB(login, refreshToken);
 
          const newUserData = {
             ...userData,
             accessToken,
             refreshToken,
          };
-
-         await this.saveUserData(newUserData, login);
 
          return res
             .status(HttpStatusCode.Ok)
