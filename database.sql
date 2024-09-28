@@ -1,20 +1,23 @@
 CREATE TABLE users (
-    id VARCHAR(255) PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255),
     login VARCHAR(255),
     password VARCHAR(255),
-    registrTime TIMESTAMP
+    registr_time TIMESTAMP
 );
 
 CREATE TABLE tokens (
-    user_id VARCHAR(255) UNIQUE,
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) UNIQUE NOT NULL,
     refresh_token VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
 CREATE TABLE favorites (
-    user_id VARCHAR(255) UNIQUE,
-    ids TEXT[],
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    user_id VARCHAR(255) NOT NULL,
+    loft_id VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id),
+    UNIQUE (user_id, loft_id)
 );
 

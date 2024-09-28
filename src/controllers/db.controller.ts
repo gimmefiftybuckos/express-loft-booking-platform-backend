@@ -8,7 +8,10 @@ export abstract class DataBaseController {
 
       const values = [id, email, login, password, registrTime];
 
-      const query = `INSERT INTO users (id, email, login, password, registrtime) values ($1, $2, $3, $4, $5) RETURNING *;`;
+      const query = `
+         INSERT INTO users (user_id, email, login, password, registr_time) 
+         values ($1, $2, $3, $4, $5) RETURNING *;
+      `;
 
       try {
          await db.query(query, values);
@@ -26,7 +29,7 @@ export abstract class DataBaseController {
 
       const query = `
         SELECT * FROM users 
-        WHERE id = $1 OR email = $2;
+        WHERE user_id = $1 OR email = $2;
       `;
 
       const values = [id, data.email];
@@ -64,7 +67,10 @@ export abstract class DataBaseController {
 
    protected getRefreshDB = async (refreshToken: string): Promise<string> => {
       const values = [refreshToken];
-      const query = `SELECT user_id FROM tokens WHERE refresh_token = $1;`;
+      const query = `
+         SELECT user_id FROM tokens 
+         WHERE refresh_token = $1;
+      `;
 
       try {
          const data = await db.query(query, values);
@@ -87,26 +93,27 @@ export abstract class DataBaseController {
       const userId = encrypt(login);
 
       try {
-         const currentIds = await this.getFavoritesDB(login);
-
-         const updatedIds = currentIds
-            ? currentIds.includes(loftId)
-               ? currentIds.filter((id: string) => id !== loftId)
-               : [...currentIds, loftId]
-            : [loftId];
-
-         const values = [userId, updatedIds];
+         const values = [userId, loftId];
 
          const query = `
-          INSERT INTO favorites (user_id, ids)
-          VALUES ($1, $2)
-          ON CONFLICT (user_id) 
-          DO UPDATE SET ids = $2
-          RETURNING ids;
-        `;
+            WITH deleted AS (
+               DELETE FROM favorites
+               WHERE user_id = $1 AND loft_id = $2
+               RETURNING *
+            )
+            INSERT INTO favorites (user_id, loft_id)
+            SELECT $1, $2
+            WHERE NOT EXISTS (
+               SELECT 1 FROM deleted
+            )
+            RETURNING loft_id
+         `;
 
-         const data = await db.query(query, values);
-         return data.rows[0].ids;
+         await db.query(query, values);
+
+         const updatedFavorites = await this.getFavoritesDB(login);
+
+         return updatedFavorites || [];
       } catch (error) {
          this.catchDatabaseError(error, 'Failed to set favorite data');
          throw error;
@@ -118,7 +125,10 @@ export abstract class DataBaseController {
    ): Promise<string[] | null> => {
       const id = encrypt(login);
       const values = [id];
-      const query = `SELECT ids FROM favorites WHERE user_id = $1;`;
+      const query = `
+         SELECT loft_id FROM favorites 
+         WHERE user_id = $1;
+      `;
 
       try {
          const data = await db.query(query, values);
@@ -126,7 +136,8 @@ export abstract class DataBaseController {
          if (data.rows.length === 0) {
             return null;
          }
-         return data.rows[0].ids;
+
+         return data.rows.map((row) => row.loft_id);
       } catch (error) {
          this.catchDatabaseError(error, 'Failed to get favorites loft data');
          throw error;
