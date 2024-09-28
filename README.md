@@ -3,6 +3,7 @@
 Проект представляет собой backend-сервер для работы с пользователями, авторизацией, токенами и избранными элементами. Основные технологии: Node.js, Express, PostgreSQL, JWT.
 
 ### ToDo:
+
 1. Users DB ✓
 2. JWT generate and verify methods ✓
 3. Token refresh ✓
@@ -82,11 +83,12 @@ export default pool;
 
 #### Переменные окружения
 
-Скопируйте файл `.env.example` и создайте `.env`. Убедитесь, что все переменные окружения настроены корректно. Пример `.env` файла:
-
 ```env
-PORT=5000
-JWT_SECRET=your_jwt_secret
+SECRET_KEY=1b94ef099d2b4157
+IV=8d95e39c02d3b52f7a4f1a0a1e5af5af
+JWT_KEY=hekmlehpkoek
+PORT=3000
+
 DB_USER=postgres
 DB_HOST=localhost
 DB_DATABASE=loft_radar
