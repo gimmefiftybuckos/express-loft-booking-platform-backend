@@ -1,7 +1,5 @@
 # loft-radar-project-backend
 
-Проект представляет собой backend-сервер для работы с пользователями, авторизацией, токенами и избранными элементами. Основные технологии: Node.js, Express, PostgreSQL, JWT.
-
 ### ToDo:
 
 1. Users DB ✓
@@ -98,3 +96,4 @@ DB_DATABASE=loft_radar
 DB_PASSWORD=root
 DB_PORT=5432
 ```
+Основные технологии: Node.js, Express, PostgreSQL, JWT.
