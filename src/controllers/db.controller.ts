@@ -60,8 +60,7 @@ export abstract class DataBaseController {
       `;
 
       try {
-         const data = await db.query(query, values);
-         console.log(data);
+         await db.query(query, values);
       } catch (error) {
          this.catchDatabaseError(error, 'Error saving token:');
          throw error;
@@ -77,7 +76,6 @@ export abstract class DataBaseController {
 
       try {
          const data = await db.query(query, values);
-         console.log(data);
 
          if (data.rows.length === 0) {
             throw new Error('Token is invalid');
@@ -218,7 +216,6 @@ export abstract class DataBaseController {
          });
 
          const results = await Promise.all(promises);
-         console.log(results);
 
          return results;
       } catch (error) {
@@ -239,7 +236,6 @@ export abstract class DataBaseController {
          });
 
          const results = await Promise.all(promises);
-         console.log(results);
 
          return results;
       } catch (error) {
@@ -260,7 +256,6 @@ export abstract class DataBaseController {
          });
 
          const results = await Promise.all(promises);
-         console.log(results);
 
          return results;
       } catch (error) {

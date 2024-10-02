@@ -23,8 +23,6 @@ export class CatalogController extends UserController {
             page,
          });
 
-         console.log(lofts.length);
-
          res.status(HttpStatusCode.Ok).json(lofts);
       } catch (error) {
          console.error(error);
@@ -40,8 +38,6 @@ export class CatalogController extends UserController {
          const { id } = req.params;
 
          const loft = await this.getLoftDB(id);
-
-         console.log(loft);
 
          return res.status(HttpStatusCode.Ok).json(loft);
       } catch (error) {

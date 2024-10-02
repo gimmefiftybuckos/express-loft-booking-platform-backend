@@ -74,9 +74,7 @@ export const updateData = async () => {
       item.rules = randomText(3, rules);
       item.type = randomText(2, types);
       item.bookingDates = randomDate(40);
-      console.log(item);
    }
-   console.log(content);
 
    saveData<ILoft[]>(content, StoragePaths.LOFTS);
    return;

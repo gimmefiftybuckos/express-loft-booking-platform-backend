@@ -7,7 +7,10 @@ import { decrypt } from '../services/utils';
 
 export class UserController extends AuthController {
    public authUser = async (req: Request, res: Response) => {
-      const { authorization } = req.headers;
+      const { authorization, 'user-agent': user } = req.headers;
+
+      console.log(user);
+
       try {
          const data = this.verifyAuth(authorization) as TJWTData;
 
