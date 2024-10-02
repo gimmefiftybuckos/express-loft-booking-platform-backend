@@ -1,33 +1,31 @@
 import { Request, Response } from 'express';
 
-import { ILoftCard, TQuerryParams } from '../services/types';
-import { filterCards, loadData, paginate } from '../services/utils';
+import { ILoft, TQuerryParams } from '../services/types';
+import { loadData } from '../services/utils';
 import { StoragePaths } from '../services/constants';
 import { AxiosError, HttpStatusCode } from 'axios';
 import { UserController } from './user.controller';
+import { v4 as uuidv4 } from 'uuid';
 
 export class CatalogController extends UserController {
    public getLofts = async (
       req: Request<unknown, unknown, unknown, TQuerryParams>,
-      res: Response<ILoftCard[] | { error: string }>
+      res: Response<ILoft[] | { error: string }>
    ) => {
       try {
          const { type, limit = 10, page = 1, date, price } = req.query;
 
-         const loftCards = await loadData<ILoftCard>(StoragePaths.LOFTS);
-
-         const filteredCards = filterCards(
-            loftCards,
+         const lofts = await this.getFilteredLoftsDB({
             type,
-            decodeURIComponent(date),
-            decodeURIComponent(price)
-         );
+            date,
+            price,
+            limit,
+            page,
+         });
 
-         console.log(filteredCards.length);
+         console.log(lofts.length);
 
-         const paginatedCards = paginate(filteredCards, limit, page);
-
-         res.status(HttpStatusCode.Ok).json(paginatedCards);
+         res.status(HttpStatusCode.Ok).json(lofts);
       } catch (error) {
          console.error(error);
          const axiosError = error as AxiosError;
@@ -37,16 +35,39 @@ export class CatalogController extends UserController {
       }
    };
 
-   public getItem = async (req: Request, res: Response) => {
-      const loftCards = await loadData<ILoftCard>(StoragePaths.LOFTS);
-      const loftCard = loftCards.find((card) => card.id === req.params.id);
+   public getLoft = async (req: Request, res: Response) => {
+      try {
+         const { id } = req.params;
 
-      if (loftCard) {
-         res.json(loftCard);
-      } else {
-         res.status(HttpStatusCode.NotFound).json({
-            error: 'Loft Not Found',
+         const loft = await this.getLoftDB(id);
+
+         console.log(loft);
+
+         return res.status(HttpStatusCode.Ok).json(loft);
+      } catch (error) {
+         console.error(error);
+         const axiosError = error as AxiosError;
+         return res.status(HttpStatusCode.Unauthorized).json({
+            error: axiosError.message,
          });
       }
+   };
+
+   public saveLoft_TEST = async () => {
+      const loftCards = await loadData<ILoft>(StoragePaths.LOFTS);
+
+      const promises = loftCards.map(async (loft, index) => {
+         const id = uuidv4();
+         const newLoft = {
+            ...loft,
+            id,
+         };
+
+         console.log(newLoft);
+
+         return await this.saveLoftDB(newLoft);
+      });
+
+      await Promise.all(promises);
    };
 }

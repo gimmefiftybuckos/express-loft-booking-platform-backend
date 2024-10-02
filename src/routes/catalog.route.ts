@@ -10,7 +10,7 @@ import { StoragePaths } from '../services/constants';
 const router = express.Router();
 
 router.get('/catalog', controllers.catalogController.getLofts);
-router.get('/catalog/:id', controllers.catalogController.getItem);
+router.get('/catalog/:id', controllers.catalogController.getLoft);
 
 router.use(
    '/uploads',

@@ -22,8 +22,8 @@ export const compressImages = async () => {
       if (['.jpg', '.jpeg', '.png', '.webp'].includes(extname)) {
          try {
             await sharp(inputFilePath)
-               .resize({ width: 800 })
-               .jpeg({ quality: 70 })
+               .resize({ width: 700 })
+               .jpeg({ quality: 50 })
                .toFile(outputFilePath);
 
             console.log(`Successfully compressed: ${file}`);
@@ -36,4 +36,4 @@ export const compressImages = async () => {
    }
 };
 
-compressImages();
+// compressImages();

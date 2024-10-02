@@ -55,14 +55,28 @@ CREATE TABLE tokens (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) UNIQUE NOT NULL,
     refresh_token VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES users (user_id)
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE favorites (
     user_id VARCHAR(255) NOT NULL,
-    loft_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (user_id),
+    loft_id UUID NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (loft_id) REFERENCES lofts (loft_id) ON DELETE CASCADE,
     UNIQUE (user_id, loft_id)
+);
+
+CREATE TABLE lofts (
+    id SERIAL PRIMARY KEY,
+    loft_id UUID UNIQUE NOT NULL,
+    title VARCHAR(255),
+    metro_station VARCHAR(255),
+    walking_minutes INT,
+    price_per_hour INT,
+    max_persons INT,
+    seating_places INT,
+    area INT,
+    date TIMESTAMP DEFAULT NOW()
 );
 ```
 
@@ -96,4 +110,5 @@ DB_DATABASE=loft_radar
 DB_PASSWORD=root
 DB_PORT=5432
 ```
+
 Основные технологии: Node.js, Express, PostgreSQL, JWT.

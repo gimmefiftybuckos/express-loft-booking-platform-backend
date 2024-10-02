@@ -1,5 +1,5 @@
 import { StoragePaths } from '../services/constants';
-import { ILoftCard } from '../services/types';
+import { ILoft } from '../services/types';
 import { loadData, saveData } from '../services/utils';
 
 const randomNum = (min: number, max: number) =>
@@ -67,7 +67,7 @@ const randomDate = (value: number) => {
 };
 
 export const updateData = async () => {
-   const content = await loadData<ILoftCard>(StoragePaths.LOFTS);
+   const content = await loadData<ILoft>(StoragePaths.LOFTS);
 
    for (let item of content) {
       item.imageUrl = randomImage(20);
@@ -78,7 +78,7 @@ export const updateData = async () => {
    }
    console.log(content);
 
-   saveData<ILoftCard[]>(content, StoragePaths.LOFTS);
+   saveData<ILoft[]>(content, StoragePaths.LOFTS);
    return;
 };
 
