@@ -14,14 +14,6 @@ CREATE TABLE tokens (
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE favorites (
-    user_id VARCHAR(255) NOT NULL,
-    loft_id UUID NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (loft_id) REFERENCES lofts (loft_id) ON DELETE CASCADE,
-    UNIQUE (user_id, loft_id)
-);
-
 CREATE TABLE lofts (
     id SERIAL PRIMARY KEY,
     loft_id UUID UNIQUE NOT NULL,           
@@ -33,6 +25,14 @@ CREATE TABLE lofts (
     seating_places INT,                   
     area INT,    
     date TIMESTAMP DEFAULT NOW()                          
+);
+
+CREATE TABLE favorites (
+    user_id VARCHAR(255) NOT NULL,
+    loft_id UUID NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (loft_id) REFERENCES lofts (loft_id) ON DELETE CASCADE,
+    UNIQUE (user_id, loft_id)
 );
 
 CREATE TABLE loft_images (
@@ -64,9 +64,10 @@ CREATE TABLE loft_comments (
     comment_date TIMESTAMP DEFAULT NOW() 
 );
 
--- drop table lofts CASCADE;
--- drop table loft_booking_dates;
--- drop table loft_images;
--- drop table loft_rules;
--- drop table loft_types;
--- drop table loft_comments;
+drop table lofts CASCADE;
+drop table favorites;
+drop table loft_booking_dates;
+drop table loft_images;
+drop table loft_rules;
+drop table loft_types;
+drop table loft_comments;

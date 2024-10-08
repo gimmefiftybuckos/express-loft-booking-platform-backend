@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { ILoft, TQuerryParams } from '../services/types';
+import { ILoft, TJWTData, TQuerryParams } from '../services/types';
 import { loadData } from '../services/utils';
 import { StoragePaths } from '../services/constants';
 import { AxiosError, HttpStatusCode } from 'axios';
@@ -44,6 +44,34 @@ export class CatalogController extends UserController {
          console.error(error);
          const axiosError = error as AxiosError;
          return res.status(HttpStatusCode.Unauthorized).json({
+            error: axiosError.message,
+         });
+      }
+   };
+
+   public getFavoritesLofts = async (req: Request, res: Response) => {
+      const { authorization } = req.headers;
+
+      try {
+         const userData = this.verifyAuth(authorization) as TJWTData;
+
+         const { login } = userData;
+
+         const loftIds = await this.getFavoritesIdDB(login);
+
+         console.log(loftIds);
+
+         if (!loftIds) {
+            return res.status(HttpStatusCode.Ok).json([]);
+         }
+
+         const lofts = await this.getFavoritesLoftsDB(loftIds);
+
+         return res.status(HttpStatusCode.Ok).json(lofts);
+      } catch (error) {
+         console.error(error);
+         const axiosError = error as AxiosError;
+         return res.status(HttpStatusCode.InternalServerError).json({
             error: axiosError.message,
          });
       }

@@ -9,6 +9,6 @@ router.get('/auth', controllers.userController.authUser);
 router.post('/logout', controllers.userController.logout);
 
 router.post('/favorite', controllers.userController.setFavorite);
-router.get('/favorite', controllers.userController.getFavorites);
+router.get('/favorite', controllers.userController.getFavoritesId);
 
 export default router;

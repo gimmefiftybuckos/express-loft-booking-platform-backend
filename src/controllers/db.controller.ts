@@ -3,6 +3,15 @@ import { ILoft, ILoftInit, IUserData } from '../services/types';
 import { encrypt } from '../services/utils';
 
 export abstract class DataBaseController {
+   private catchDatabaseError = (error: unknown, customMessage: string) => {
+      console.error(customMessage, error);
+      if (error instanceof Error) {
+         throw new Error(`${customMessage}: ${error.message}`);
+      } else {
+         throw new Error(`${customMessage}: Unknown error occurred`);
+      }
+   };
+
    /*
       User Auth
    */
@@ -112,7 +121,7 @@ export abstract class DataBaseController {
 
          await db.query(query, values);
 
-         const updatedFavorites = await this.getFavoritesDB(login);
+         const updatedFavorites = await this.getFavoritesIdDB(login);
 
          return updatedFavorites || [];
       } catch (error) {
@@ -123,9 +132,10 @@ export abstract class DataBaseController {
 
    /*
       Lofts
+      Favorites
    */
 
-   protected getFavoritesDB = async (
+   protected getFavoritesIdDB = async (
       login: string
    ): Promise<string[] | null> => {
       const id = encrypt(login);
@@ -149,14 +159,53 @@ export abstract class DataBaseController {
       }
    };
 
-   private catchDatabaseError = (error: unknown, customMessage: string) => {
-      console.error(customMessage, error);
-      if (error instanceof Error) {
-         throw new Error(`${customMessage}: ${error.message}`);
-      } else {
-         throw new Error(`${customMessage}: Unknown error occurred`);
+   protected getFavoritesLoftsDB = async (
+      loftIds: string[]
+   ): Promise<ILoft[]> => {
+      const query = `
+         SELECT 
+            l.loft_id AS id,
+            l.title,
+            l.metro_station AS "metroStation",
+            l.walking_minutes AS "walkingDistanceMinutes",
+            l.price_per_hour AS "pricePerHour",
+            l.max_persons AS "maxPersons",
+            l.seating_places AS "seatingPlaces",
+            l.area,
+            l.date,
+            ARRAY_AGG(DISTINCT li.image_url) AS "imageUrl",
+            ARRAY_AGG(DISTINCT lt.type) AS "type",
+            ARRAY_AGG(DISTINCT lr.rule) AS "rules",
+            ARRAY_AGG(DISTINCT lbd.booking_date) AS "bookingDates",
+            COALESCE(AVG(lc.rating)::DECIMAL, 0) AS "averageRating",  
+            COUNT(lc.id)::INT AS "reviewsCount"                   
+         FROM lofts l
+         LEFT JOIN loft_images li ON l.loft_id = li.loft_id
+         LEFT JOIN loft_types lt ON l.loft_id = lt.loft_id
+         LEFT JOIN loft_rules lr ON l.loft_id = lr.loft_id
+         LEFT JOIN loft_booking_dates lbd ON l.loft_id = lbd.loft_id
+         LEFT JOIN loft_comments lc ON l.loft_id = lc.loft_id 
+         WHERE l.loft_id = ANY($1)
+         GROUP BY l.loft_id, l.title, l.metro_station, l.walking_minutes, l.price_per_hour, 
+                  l.max_persons, l.seating_places, l.area, l.date
+         ORDER BY l.loft_id;
+      `;
+
+      const values = [loftIds];
+
+      try {
+         const result = await db.query(query, values);
+         return result.rows;
+      } catch (error) {
+         this.catchDatabaseError(error, 'Failed to get favorites lofts');
+         throw error;
       }
    };
+
+   /*
+      Lofts
+      Catalog
+   */
 
    protected saveLoftDB = async (loft: ILoft) => {
       Promise.all([
@@ -291,28 +340,6 @@ export abstract class DataBaseController {
       }
    };
 
-   // protected getLoftDB = async (id: string) => {
-   //    const [info, images, types, rules, dates] = await Promise.all([
-   //       await this.getLoftInfoDB(id),
-   //       await this.getLoftImagesDB(id),
-   //       await this.getLoftTypesDB(id),
-   //       await this.getLoftRulesDB(id),
-   //       await this.getLoftDatesDB(id),
-   //    ]);
-
-   //    const loft: ILoft = {
-   //       ...info,
-   //       imageUrl: images,
-   //       type: types,
-   //       rules: rules,
-   //       averageRating: 0,
-   //       reviewsCount: 0,
-   //       bookingDates: dates,
-   //    };
-
-   //    return loft;
-   // };
-
    protected getLoftDB = async (id: string) => {
       const query = `
             SELECT 
@@ -351,7 +378,7 @@ export abstract class DataBaseController {
 
          return result.rows[0].loft_data;
       } catch (error) {
-         this.catchDatabaseError(error, 'Failed to get filtered lofts');
+         this.catchDatabaseError(error, 'Failed to get loft data');
          throw error;
       }
    };
@@ -425,7 +452,7 @@ export abstract class DataBaseController {
          const result = await db.query(query, values);
          return result.rows;
       } catch (error) {
-         this.catchDatabaseError(error, 'Failed to get filtered lofts');
+         this.catchDatabaseError(error, 'Failed to get filtered lofts data');
          throw error;
       }
    };
@@ -438,7 +465,7 @@ export abstract class DataBaseController {
       const values = [id];
 
       const query = `
-            SELECT 
+            SELECT
                 loft_id,
                 title,
                 metro_station,

@@ -137,7 +137,7 @@ export class UserController extends AuthController {
       }
    };
 
-   public getFavorites = async (req: Request, res: Response) => {
+   public getFavoritesId = async (req: Request, res: Response) => {
       const { authorization } = req.headers;
 
       try {
@@ -145,7 +145,7 @@ export class UserController extends AuthController {
 
          const { login } = userData;
 
-         const data = await this.getFavoritesDB(login);
+         const data = await this.getFavoritesIdDB(login);
 
          return res.status(HttpStatusCode.Ok).json(data);
       } catch (error) {

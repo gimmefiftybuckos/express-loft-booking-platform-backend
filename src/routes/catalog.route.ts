@@ -9,8 +9,9 @@ import { StoragePaths } from '../services/constants';
 
 const router = express.Router();
 
-router.get('/catalog', controllers.catalogController.getLofts);
-router.get('/catalog/:id', controllers.catalogController.getLoft);
+router.get('/', controllers.catalogController.getLofts);
+router.get('/page/:id', controllers.catalogController.getLoft);
+router.get('/favorites', controllers.catalogController.getFavoritesLofts);
 
 router.use(
    '/uploads',
