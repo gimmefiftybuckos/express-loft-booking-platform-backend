@@ -13,13 +13,8 @@ export class RegistrController extends AuthController {
    ) => {
       const { email, login, password } = req.body;
 
-      if (!email || !login || !password) {
-         return res
-            .status(HttpStatusCode.BadRequest)
-            .json({ error: 'Email, login and password are required' });
-      }
-
       try {
+         this.validateRegistr({ email, login, password });
          const isUserExists = await this.getUserDB({ login, email });
 
          if (!isUserExists) {
@@ -41,12 +36,46 @@ export class RegistrController extends AuthController {
          if (error instanceof Error) {
             return res
                .status(HttpStatusCode.InternalServerError)
-               .json({ error: 'Internal Server Error: ' + error.message });
+               .json({ error: error.message });
          } else {
             return res
                .status(HttpStatusCode.InternalServerError)
                .json({ error: 'Unknown error during registration' });
          }
+      }
+   };
+
+   private validateRegistr = ({
+      email,
+      login,
+      password,
+   }: {
+      email: string;
+      login: string;
+      password: string;
+   }) => {
+      if (!email || !login || !password) {
+         throw new Error('Email, login and password are required');
+      }
+
+      if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+         throw new Error('Email is invalid');
+      }
+
+      if (!/^[a-zA-Z0-9]+$/.test(login)) {
+         throw new Error('Login must contain only Latin letters and numbers');
+      }
+      if (login.length < 3) {
+         throw new Error('Login must be at least 3 characters long');
+      }
+
+      if (!/^[a-zA-Z0-9]+$/.test(password)) {
+         throw new Error(
+            'Password must contain only Latin letters and numbers'
+         );
+      }
+      if (password.length < 8) {
+         throw new Error('Password must be at least 8 characters long');
       }
    };
 

@@ -12,13 +12,9 @@ export class LoginController extends AuthController {
    ) => {
       const { login, password } = req.body;
 
-      if (!login || !password) {
-         return res
-            .status(HttpStatusCode.BadRequest)
-            .json({ error: 'Login and password are required' });
-      }
-
       try {
+         this.validateLogin({ login, password });
+
          const userData = await this.getUserDB({ login });
 
          if (!userData) {
@@ -56,12 +52,34 @@ export class LoginController extends AuthController {
          if (error instanceof Error) {
             return res
                .status(HttpStatusCode.InternalServerError)
-               .json({ error: 'Internal Server Error: ' + error.message });
+               .json({ error: error.message });
          } else {
             return res
                .status(HttpStatusCode.InternalServerError)
                .json({ error: 'Unknown error during login' });
          }
+      }
+   };
+
+   private validateLogin = ({
+      login,
+      password,
+   }: {
+      login: string;
+      password: string;
+   }) => {
+      if (!login || !password) {
+         throw new Error('Login and password are required');
+      }
+
+      if (!/^[a-zA-Z0-9]+$/.test(login)) {
+         throw new Error('Login must contain only Latin letters and numbers');
+      }
+
+      if (!/^[a-zA-Z0-9]+$/.test(password)) {
+         throw new Error(
+            'Password must contain only Latin letters and numbers'
+         );
       }
    };
 }
