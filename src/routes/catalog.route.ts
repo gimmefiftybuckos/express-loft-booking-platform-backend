@@ -13,6 +13,9 @@ router.get('/', controllers.catalogController.getLofts);
 router.get('/page/:id', controllers.catalogController.getLoft);
 router.get('/favorites', controllers.catalogController.getFavoritesLofts);
 
+router.post('/comments', controllers.catalogController.saveComment);
+router.get('/comments/:loftId', controllers.catalogController.getComments);
+
 router.use(
    '/uploads',
    express.static(path.resolve(__dirname, '../../uploads'))

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
-import { ILoft, TJWTData, TQuerryParams } from '../services/types';
-import { loadData } from '../services/utils';
+import { IComments, ILoft, TJWTData, TQuerryParams } from '../services/types';
+import { encrypt, loadData } from '../services/utils';
 import { StoragePaths } from '../services/constants';
 import { AxiosError, HttpStatusCode } from 'axios';
 import { UserController } from './user.controller';
@@ -77,6 +77,55 @@ export class CatalogController extends UserController {
       }
    };
 
+   public saveComment = async (
+      req: Request<unknown, unknown, IComments, unknown>,
+      res: Response
+   ) => {
+      const { loftId, userRating, userReview } = req.body;
+
+      const { authorization } = req.headers;
+
+      try {
+         const userData = this.verifyAuth(authorization) as TJWTData;
+         const { login } = userData;
+         const userId = encrypt(login);
+
+         const data = await this.saveCommentDB({
+            loftId,
+            userId,
+            userRating,
+            userReview,
+         });
+
+         return res.status(HttpStatusCode.Ok).json(data);
+      } catch (error) {
+         console.error(error);
+         const axiosError = error as AxiosError;
+         return res.status(HttpStatusCode.InternalServerError).json({
+            error: axiosError.message,
+         });
+      }
+   };
+
+   public getComments = async (
+      req: Request<{ loftId: string }, unknown, unknown, unknown>,
+      res: Response
+   ) => {
+      const { loftId } = req.params;
+
+      try {
+         const data = await this.getCommentsDB(loftId);
+
+         return res.status(HttpStatusCode.Ok).json(data);
+      } catch (error) {
+         console.error(error);
+         const axiosError = error as AxiosError;
+         return res.status(HttpStatusCode.InternalServerError).json({
+            error: axiosError.message,
+         });
+      }
+   };
+
    public saveLoft_TEST = async () => {
       const loftCards = await loadData<ILoft>(StoragePaths.LOFTS);
 
@@ -86,8 +135,6 @@ export class CatalogController extends UserController {
             ...loft,
             id,
          };
-
-         console.log(newLoft);
 
          return await this.saveLoftDB(newLoft);
       });

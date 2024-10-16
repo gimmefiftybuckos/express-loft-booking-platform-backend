@@ -1,6 +1,6 @@
 import db from '../db';
-import { ILoft, ILoftInit, IUserData } from '../services/types';
-import { encrypt } from '../services/utils';
+import { IComments, ILoft, ILoftInit, IUserData } from '../services/types';
+import { decrypt, encrypt } from '../services/utils';
 
 export abstract class DataBaseController {
    private catchDatabaseError = (error: unknown, customMessage: string) => {
@@ -166,6 +166,7 @@ export abstract class DataBaseController {
          SELECT 
             l.loft_id AS id,
             l.title,
+            'description' AS "description",
             l.metro_station AS "metroStation",
             l.walking_minutes AS "walkingDistanceMinutes",
             l.price_per_hour AS "pricePerHour",
@@ -181,12 +182,13 @@ export abstract class DataBaseController {
             COUNT(lc.id)::INT AS "reviewsCount"                   
          FROM lofts l
          LEFT JOIN loft_images li ON l.loft_id = li.loft_id
+         LEFT JOIN loft_description ld ON l.loft_id = ld.loft_id
          LEFT JOIN loft_types lt ON l.loft_id = lt.loft_id
          LEFT JOIN loft_rules lr ON l.loft_id = lr.loft_id
          LEFT JOIN loft_booking_dates lbd ON l.loft_id = lbd.loft_id
          LEFT JOIN loft_comments lc ON l.loft_id = lc.loft_id 
          WHERE l.loft_id = ANY($1)
-         GROUP BY l.loft_id, l.title, l.metro_station, l.walking_minutes, l.price_per_hour, 
+         GROUP BY l.loft_id, l.title, ld.loft_description, l.metro_station, l.walking_minutes, l.price_per_hour, 
                   l.max_persons, l.seating_places, l.area, l.date
          ORDER BY l.loft_id;
       `;
@@ -210,6 +212,7 @@ export abstract class DataBaseController {
    protected saveLoftDB = async (loft: ILoft) => {
       Promise.all([
          await this.saveLoftInfoDB(loft),
+         await this.saveLoftDescriptionDB(loft.id, loft.description),
          await this.saveLoftImagesDB(loft.id, loft.imageUrl),
          await this.saveLoftTypesDB(loft.id, loft.type),
          await this.saveLoftRulesDB(loft.id, loft.rules),
@@ -269,6 +272,24 @@ export abstract class DataBaseController {
          return results;
       } catch (error) {
          this.catchDatabaseError(error, 'Error saving loft images data:');
+         throw error;
+      }
+   };
+
+   private saveLoftDescriptionDB = async (id: string, description: string) => {
+      const query = `
+         INSERT INTO loft_description (loft_id, loft_description) 
+         values ($1, $2) RETURNING *;
+      `;
+
+      const values = [id, description];
+
+      try {
+         const result = await db.query(query, values);
+
+         return result;
+      } catch (error) {
+         this.catchDatabaseError(error, 'Error saving loft rules data:');
          throw error;
       }
    };
@@ -340,12 +361,13 @@ export abstract class DataBaseController {
       }
    };
 
-   protected getLoftDB = async (id: string) => {
+   protected getLoftDB = async (id: string): Promise<ILoft> => {
       const query = `
             SELECT 
                JSON_BUILD_OBJECT(
                   'id', l.loft_id,
                   'title', l.title,
+                  'description', ld.loft_description,
                   'metroStation', l.metro_station,
                   'walkingDistanceMinutes', l.walking_minutes,
                   'pricePerHour', l.price_per_hour,
@@ -358,17 +380,18 @@ export abstract class DataBaseController {
                   'rules', ARRAY_AGG(DISTINCT lr.rule),
                   'bookingDates', ARRAY_AGG(DISTINCT lbd.booking_date),
                   'averageRating', COALESCE(AVG(lc.rating)::DECIMAL, 0),
-                  'reviewsCount', COUNT(lc.id)::INT
+                  'reviewsCount', (SELECT COUNT(*) FROM loft_comments WHERE loft_id = l.loft_id)::INT
                ) AS loft_data
             FROM lofts l
             LEFT JOIN loft_images li ON l.loft_id = li.loft_id
+            LEFT JOIN loft_description ld ON l.loft_id = ld.loft_id
             LEFT JOIN loft_types lt ON l.loft_id = lt.loft_id
             LEFT JOIN loft_rules lr ON l.loft_id = lr.loft_id
             LEFT JOIN loft_booking_dates lbd ON l.loft_id = lbd.loft_id
             LEFT JOIN loft_comments lc ON l.loft_id = lc.loft_id
             WHERE l.loft_id = $1
-            GROUP BY l.loft_id, l.title, l.metro_station, l.walking_minutes, l.price_per_hour, 
-               l.max_persons, l.seating_places, l.area, l.date
+            GROUP BY l.loft_id, l.title, ld.loft_description, l.metro_station, l.walking_minutes, l.price_per_hour, 
+               l.max_persons, l.seating_places, l.area, l.date;
          `;
 
       const values = [id];
@@ -453,6 +476,72 @@ export abstract class DataBaseController {
          return result.rows;
       } catch (error) {
          this.catchDatabaseError(error, 'Failed to get filtered lofts data');
+         throw error;
+      }
+   };
+
+   protected saveCommentDB = async ({
+      loftId,
+      userId,
+      userRating,
+      userReview,
+   }: IComments) => {
+      if (!loftId || !userId) {
+         throw new Error('Loft or user ids is not found');
+      }
+      const login = decrypt(userId);
+
+      const query = `
+        INSERT INTO loft_comments (loft_id, user_id, login, comment_text, rating) 
+        values ($1, $2, $3, $4, $5) 
+        RETURNING 
+            user_id AS "userId", 
+            login, 
+            comment_text AS "userReview", 
+            rating AS "userRating", 
+            to_char(comment_date, 'YYYY-MM-DD') AS "date";
+    `;
+
+      const values = [loftId, userId, login, userReview, userRating];
+
+      try {
+         const data = await db.query(query, values);
+
+         return data.rows[0];
+      } catch (error) {
+         this.catchDatabaseError(error, 'Error saving comment data:');
+         throw error;
+      }
+   };
+
+   protected getCommentsDB = async (loftId: string) => {
+      const values = [loftId];
+      const query = `SELECT
+            lc.user_id AS "userId",
+            lc.login AS "login",
+            lc.comment_text AS "userReview",
+            lc.rating AS "userRating",
+            lc.comment_date AS "date"
+         FROM loft_comments lc
+         WHERE lc.loft_id = $1;
+      `;
+
+      try {
+         const data = await db.query(query, values);
+
+         if (data.rows.length === 0) {
+            return [];
+         }
+
+         return data.rows.map((row) => ({
+            userId: row.userId,
+            login: row.login,
+            userReview: row.userReview,
+            userRating: row.userRating,
+            date: new Date(row.date),
+         }));
+      } catch (error) {
+         this.catchDatabaseError(error, 'Failed to get comments array data');
          throw error;
       }
    };

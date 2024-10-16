@@ -3,6 +3,7 @@ import { StoragePaths } from './constants';
 export interface ILoftInit {
    id: string;
    title: string;
+   description: string;
    metroStation: string;
    walkingDistanceMinutes: number;
    pricePerHour: number;
@@ -19,6 +20,13 @@ export interface ILoft extends ILoftInit {
    reviewsCount: number;
    averageRating: string;
    bookingDates: string[];
+}
+
+export interface IComments {
+   loftId: string;
+   userId?: string;
+   userReview: string;
+   userRating: number;
 }
 
 export type TStoragePath = StoragePaths;

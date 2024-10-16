@@ -40,6 +40,11 @@ CREATE TABLE loft_images (
     image_url VARCHAR(255)                              
 );
 
+CREATE TABLE loft_description (
+    loft_id UUID REFERENCES lofts(loft_id) ON DELETE CASCADE, 
+    loft_description TEXT         
+);
+
 CREATE TABLE loft_types (
     loft_id UUID REFERENCES lofts(loft_id) ON DELETE CASCADE, 
     type VARCHAR(100)                                   
@@ -56,16 +61,18 @@ CREATE TABLE loft_booking_dates (
 );
 
 CREATE TABLE loft_comments (
-    id SERIAL PRIMARY KEY,               
-    loft_id UUID REFERENCES lofts(loft_id) ON DELETE CASCADE,      
-    user_id VARCHAR(255) REFERENCES users(user_id) ON DELETE CASCADE,  
+    id SERIAL PRIMARY KEY,          
+    loft_id UUID REFERENCES lofts(loft_id) ON DELETE CASCADE NOT NULL,      
+    user_id VARCHAR(255) REFERENCES users(user_id) ON DELETE CASCADE NOT NULL, 
+    login VARCHAR(255) NOT NULL,
     comment_text TEXT NOT NULL,          
-    rating DECIMAL(2, 1),                
+    rating INT NOT NULL,                
     comment_date TIMESTAMP DEFAULT NOW() 
 );
 
-drop table lofts CASCADE;
 drop table favorites;
+drop table lofts CASCADE;
+drop table loft_description;
 drop table loft_booking_dates;
 drop table loft_images;
 drop table loft_rules;
