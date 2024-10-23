@@ -441,7 +441,7 @@ export abstract class DataBaseController {
          ARRAY_AGG(DISTINCT lr.rule) AS "rules",
          ARRAY_AGG(DISTINCT lbd.booking_date) AS "bookingDates",
          COALESCE(AVG(lc.rating)::DECIMAL, 0) AS "averageRating",  
-         COUNT(lc.id)::INT AS "reviewsCount"                   
+         (SELECT COUNT(*) FROM loft_comments WHERE loft_id = l.loft_id)::INT AS "reviewsCount"                   
       FROM lofts l
       LEFT JOIN loft_images li ON l.loft_id = li.loft_id
       LEFT JOIN loft_types lt ON l.loft_id = lt.loft_id
@@ -500,7 +500,9 @@ export abstract class DataBaseController {
             comment_text AS "userReview", 
             rating AS "userRating", 
             to_char(comment_date, 'YYYY-MM-DD') AS "date";
-    `;
+      `;
+
+      console.log(loftId, userId);
 
       const values = [loftId, userId, login, userReview, userRating];
 
@@ -510,6 +512,24 @@ export abstract class DataBaseController {
          return data.rows[0];
       } catch (error) {
          this.catchDatabaseError(error, 'Error saving comment data:');
+         throw error;
+      }
+   };
+
+   protected checkComment = async (userId: string, loftId: string) => {
+      const values = [userId, loftId];
+
+      const query = `
+         SELECT * FROM loft_comments 
+         WHERE user_id = $1 AND loft_id = $2;
+      `;
+
+      try {
+         const data = await db.query(query, values);
+
+         return data.rows[0];
+      } catch (error) {
+         this.catchDatabaseError(error, 'Error checking comment data:');
          throw error;
       }
    };

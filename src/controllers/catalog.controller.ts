@@ -90,6 +90,12 @@ export class CatalogController extends UserController {
          const { login } = userData;
          const userId = encrypt(login);
 
+         const isExist = await this.checkComment(userId, loftId);
+
+         if (isExist) {
+            throw new Error('Comment is exist');
+         }
+
          const data = await this.saveCommentDB({
             loftId,
             userId,
