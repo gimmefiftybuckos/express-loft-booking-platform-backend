@@ -7,9 +7,10 @@
 3. Token refresh ✓
 4. Error catching ✓
 5. Favorites DB ✓
-6. Comments DB
-7. Refactoring
-8. Tests (?)
+6. Comments DB ✓
+7. Add loft form
+8. Refactoring
+9. Tests (?)
 
 <br />
   
@@ -58,14 +59,6 @@ CREATE TABLE tokens (
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE favorites (
-    user_id VARCHAR(255) NOT NULL,
-    loft_id UUID NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (loft_id) REFERENCES lofts (loft_id) ON DELETE CASCADE,
-    UNIQUE (user_id, loft_id)
-);
-
 CREATE TABLE lofts (
     id SERIAL PRIMARY KEY,
     loft_id UUID UNIQUE NOT NULL,
@@ -77,6 +70,14 @@ CREATE TABLE lofts (
     seating_places INT,
     area INT,
     date TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE favorites (
+    user_id VARCHAR(255) NOT NULL,
+    loft_id UUID NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (loft_id) REFERENCES lofts (loft_id) ON DELETE CASCADE,
+    UNIQUE (user_id, loft_id)
 );
 ```
 
