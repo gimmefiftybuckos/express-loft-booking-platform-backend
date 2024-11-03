@@ -63,11 +63,11 @@ CREATE TABLE lofts (
     id SERIAL PRIMARY KEY,
     loft_id UUID UNIQUE NOT NULL,
     title VARCHAR(255),
-    metro_station VARCHAR(255),
-    walking_minutes INT,
-    price_per_hour INT,
-    max_persons INT,
-    seating_places INT,
+    metro VARCHAR(255),
+    walk INT,
+    price INT,
+    persons INT,
+    places INT,
     area INT,
     date TIMESTAMP DEFAULT NOW()
 );

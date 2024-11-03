@@ -8,6 +8,22 @@ import { UserController } from './user.controller';
 import { v4 as uuidv4 } from 'uuid';
 
 export class CatalogController extends UserController {
+   public INITAL_LOAD_CATALOG = async () => {
+      const loftCards = await loadData<ILoft>(StoragePaths.LOFTS);
+
+      const promises = loftCards.map(async (loft) => {
+         const id = uuidv4();
+         const newLoft = {
+            ...loft,
+            id,
+         };
+
+         return await this.saveLoftDB(newLoft);
+      });
+
+      await Promise.all(promises);
+   };
+
    public getLofts = async (
       req: Request<unknown, unknown, unknown, TQuerryParams>,
       res: Response<ILoft[] | { error: string }>
@@ -131,20 +147,8 @@ export class CatalogController extends UserController {
          });
       }
    };
-
-   public saveLoft_TEST = async () => {
-      const loftCards = await loadData<ILoft>(StoragePaths.LOFTS);
-
-      const promises = loftCards.map(async (loft, index) => {
-         const id = uuidv4();
-         const newLoft = {
-            ...loft,
-            id,
-         };
-
-         return await this.saveLoftDB(newLoft);
-      });
-
-      await Promise.all(promises);
-   };
 }
+
+const test = new CatalogController();
+
+test.INITAL_LOAD_CATALOG();

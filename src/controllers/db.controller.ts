@@ -167,11 +167,11 @@ export abstract class DataBaseController {
             l.loft_id AS id,
             l.title,
             'description' AS "description",
-            l.metro_station AS "metroStation",
-            l.walking_minutes AS "walkingDistanceMinutes",
-            l.price_per_hour AS "pricePerHour",
-            l.max_persons AS "maxPersons",
-            l.seating_places AS "seatingPlaces",
+            l.metro AS "metroStation",
+            l.walk AS "walkingDistanceMinutes",
+            l.price AS "pricePerHour",
+            l.persons AS "maxPersons",
+            l.places AS "seatingPlaces",
             l.area,
             l.date,
             ARRAY_AGG(DISTINCT li.image_url) AS "imageUrl",
@@ -179,7 +179,7 @@ export abstract class DataBaseController {
             ARRAY_AGG(DISTINCT lr.rule) AS "rules",
             ARRAY_AGG(DISTINCT lbd.booking_date) AS "bookingDates",
             COALESCE(AVG(lc.rating)::DECIMAL, 0) AS "averageRating",  
-            COUNT(lc.id)::INT AS "reviewsCount"                   
+            (SELECT COUNT(*) FROM loft_comments WHERE loft_id = l.loft_id)::INT AS "reviewsCount"                   
          FROM lofts l
          LEFT JOIN loft_images li ON l.loft_id = li.loft_id
          LEFT JOIN loft_description ld ON l.loft_id = ld.loft_id
@@ -188,8 +188,8 @@ export abstract class DataBaseController {
          LEFT JOIN loft_booking_dates lbd ON l.loft_id = lbd.loft_id
          LEFT JOIN loft_comments lc ON l.loft_id = lc.loft_id 
          WHERE l.loft_id = ANY($1)
-         GROUP BY l.loft_id, l.title, ld.loft_description, l.metro_station, l.walking_minutes, l.price_per_hour, 
-                  l.max_persons, l.seating_places, l.area, l.date
+         GROUP BY l.loft_id, l.title, ld.loft_description, l.metro, l.walk, l.price, 
+                  l.persons, l.places, l.area, l.date
          ORDER BY l.loft_id;
       `;
 
@@ -244,7 +244,7 @@ export abstract class DataBaseController {
       ];
 
       const query = `
-         INSERT INTO lofts (loft_id, title, metro_station, walking_minutes, price_per_hour, max_persons, seating_places, area) 
+         INSERT INTO lofts (loft_id, title, metro, walk, price, persons, places, area) 
          values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;
       `;
 
@@ -368,11 +368,11 @@ export abstract class DataBaseController {
                   'id', l.loft_id,
                   'title', l.title,
                   'description', ld.loft_description,
-                  'metroStation', l.metro_station,
-                  'walkingDistanceMinutes', l.walking_minutes,
-                  'pricePerHour', l.price_per_hour,
-                  'maxPersons', l.max_persons,
-                  'seatingPlaces', l.seating_places,
+                  'metroStation', l.metro,
+                  'walkingDistanceMinutes', l.walk,
+                  'pricePerHour', l.price,
+                  'maxPersons', l.persons,
+                  'seatingPlaces', l.places,
                   'area', l.area,
                   'date', l.date,
                   'imageUrl', ARRAY_AGG(DISTINCT li.image_url),
@@ -390,8 +390,8 @@ export abstract class DataBaseController {
             LEFT JOIN loft_booking_dates lbd ON l.loft_id = lbd.loft_id
             LEFT JOIN loft_comments lc ON l.loft_id = lc.loft_id
             WHERE l.loft_id = $1
-            GROUP BY l.loft_id, l.title, ld.loft_description, l.metro_station, l.walking_minutes, l.price_per_hour, 
-               l.max_persons, l.seating_places, l.area, l.date;
+            GROUP BY l.loft_id, l.title, ld.loft_description, l.metro, l.walk, l.price, 
+               l.persons, l.places, l.area, l.date;
          `;
 
       const values = [id];
@@ -429,11 +429,11 @@ export abstract class DataBaseController {
       const query = `SELECT 
          l.loft_id AS id,
          l.title,
-         l.metro_station AS "metroStation",
-         l.walking_minutes AS "walkingDistanceMinutes",
-         l.price_per_hour AS "pricePerHour",
-         l.max_persons AS "maxPersons",
-         l.seating_places AS "seatingPlaces",
+         l.metro AS "metroStation",
+         l.walk AS "walkingDistanceMinutes",
+         l.price AS "pricePerHour",
+         l.persons AS "maxPersons",
+         l.places AS "seatingPlaces",
          l.area,
          l.date,
          ARRAY_AGG(DISTINCT li.image_url) AS "imageUrl",
@@ -448,15 +448,15 @@ export abstract class DataBaseController {
       LEFT JOIN loft_rules lr ON l.loft_id = lr.loft_id
       LEFT JOIN loft_booking_dates lbd ON l.loft_id = lbd.loft_id
       LEFT JOIN loft_comments lc ON l.loft_id = lc.loft_id 
-      GROUP BY l.loft_id, l.title, l.metro_station, l.walking_minutes, l.price_per_hour, 
-               l.max_persons, l.seating_places, l.area, l.date
+      GROUP BY l.loft_id, l.title, l.metro, l.walk, l.price, 
+               l.persons, l.places, l.area, l.date
       HAVING 
          ($1::TEXT IS NULL OR $1 = ANY(ARRAY_AGG(DISTINCT lt.type)))
          AND ($2::TEXT IS NULL OR $2::TEXT NOT IN (
             SELECT booking_date FROM loft_booking_dates WHERE loft_id = l.loft_id
          ))
-         AND ($3::INT IS NULL OR l.price_per_hour >= $3)
-         AND ($4::INT IS NULL OR l.price_per_hour <= $4)
+         AND ($3::INT IS NULL OR l.price >= $3)
+         AND ($4::INT IS NULL OR l.price <= $4)
       ORDER BY l.loft_id
       LIMIT $5 OFFSET $6;`; // построить получение данных через курсоры (!)
 
@@ -577,11 +577,11 @@ export abstract class DataBaseController {
             SELECT
                 loft_id,
                 title,
-                metro_station,
-                walking_minutes,
-                price_per_hour,
-                max_persons,
-                seating_places,
+                metro,
+                walk,
+                price,
+                persons,
+                places,
                 area,
                 date
             FROM lofts
