@@ -5,8 +5,8 @@ export interface ILoftInit {
    title: string;
    description: string;
    metroStation: string;
-   walkingDistanceMinutes: number;
-   pricePerHour: number;
+   walkingDistance: number;
+   price: number;
    maxPersons: number;
    seatingPlaces: number;
    area: number;
