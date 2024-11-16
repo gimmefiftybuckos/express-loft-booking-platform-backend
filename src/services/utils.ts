@@ -73,8 +73,7 @@ const filterCards = (
       const filteredByType = filter ? item.type.includes(filter) : true;
       const filteredByDate = date ? !item.bookingDates.includes(date) : true;
       const filteredByPrice = maxPrice
-         ? item.pricePerHour >= parseInt(minPrice) &&
-           item.pricePerHour <= parseInt(maxPrice)
+         ? item.price >= parseInt(minPrice) && item.price <= parseInt(maxPrice)
          : true;
 
       return filteredByType && filteredByDate && filteredByPrice;

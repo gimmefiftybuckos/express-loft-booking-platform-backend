@@ -69,12 +69,3 @@ CREATE TABLE loft_comments (
     rating INT NOT NULL,                
     comment_date TIMESTAMP DEFAULT NOW() 
 );
-
-drop table favorites;
-drop table lofts CASCADE;
-drop table loft_description;
-drop table loft_booking_dates;
-drop table loft_images;
-drop table loft_rules;
-drop table loft_types;
-drop table loft_comments;
